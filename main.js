@@ -8,6 +8,8 @@ var sanitizeHtml = require('sanitize-html');
 var template = require('./lib/template.js');
 var bodyParser = require('body-parser');
 var compression = require('compression');
+//public 디렉토리 아래에서 스태틱 파일들을 찾겠다.
+app.use(express.static('public'))
 
 //main.js가 실행될때 마다 아랫줄의 미들웨어 또한 실행된다.
 //사용자가 전송한 포스트 데이터를 내부적으로 분석해서,
@@ -20,7 +22,7 @@ app.get('*',function(request,response,next){
     
     //list라는 프로퍼티에 파일리스트를 주겠다.
     request.list = filelist;
-    next();
+    next()
   })
 })
 
@@ -32,18 +34,23 @@ app.get('/', function(request, response){
     var description = 'Hello, Node.js';
     var list = template.list(request.list);
     var html = template.HTML(title, list,
-      `<h2>${title}</h2>${description}`,
+      `<h2>${title}</h2>${description}
+      <img style="width:450px; diaplay:block; margin:10px" src="/images/hello.jpg">`
+,
       `<a href="/create">create</a>`
     );
     response.send(html);
 
 })
 
-app.get('/page/:pageId', function(request,response){
+app.get('/page/:pageId', function(request,response,next){
   console.log("지금 콘솔: ",request.list);
   
     var filteredId = path.parse(request.params.pageId).base;
     fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+      if(err){
+        next(err);
+      } else{
       var title = request.params.pageId;
       var sanitizedTitle = sanitizeHtml(title);
       var sanitizedDescription = sanitizeHtml(description, {
@@ -60,6 +67,7 @@ app.get('/page/:pageId', function(request,response){
           </form>`
       );
       response.send(html)
+      }
     });
   
 })
@@ -160,10 +168,18 @@ app.post('/delete_process',function(request,response){
           })
       });
 
+app.use(function(req, res, next) {
+  res.status(404).send('Sorry cant find that!');
+});
 
+app.use(function(err, req, res, next) {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 //listen이 시작될때 웹서버가 실행된다.
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
 
