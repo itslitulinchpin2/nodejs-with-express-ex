@@ -15,24 +15,33 @@ var compression = require('compression');
 //request.body라는 프로퍼티를 미들웨어가 만들어준다.
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(compression())
+app.get('*',function(request,response,next){
+  fs.readdir('./data', function(error, filelist){
+    
+    //list라는 프로퍼티에 파일리스트를 주겠다.
+    request.list = filelist;
+    next();
+  })
+})
 
 const port = 3000
 //get 뒤의 첫번째 인자는 path, routing을 위함
 app.get('/', function(request, response){
-  fs.readdir('./data', function(error, filelist){
+  
     var title = 'Welcome';
     var description = 'Hello, Node.js';
-    var list = template.list(filelist);
+    var list = template.list(request.list);
     var html = template.HTML(title, list,
       `<h2>${title}</h2>${description}`,
       `<a href="/create">create</a>`
     );
     response.send(html);
-  });
+
 })
 
 app.get('/page/:pageId', function(request,response){
-  fs.readdir('./data', function(error, filelist){
+  console.log("지금 콘솔: ",request.list);
+  
     var filteredId = path.parse(request.params.pageId).base;
     fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
       var title = request.params.pageId;
@@ -40,7 +49,7 @@ app.get('/page/:pageId', function(request,response){
       var sanitizedDescription = sanitizeHtml(description, {
         allowedTags:['h1']
       });
-      var list = template.list(filelist);
+      var list = template.list(request.list);
       var html = template.HTML(sanitizedTitle, list,
         `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
         ` <a href="/create">create</a>
@@ -52,13 +61,13 @@ app.get('/page/:pageId', function(request,response){
       );
       response.send(html)
     });
-  });
+  
 })
 
 app.get('/create',function(request,response){
-  fs.readdir('./data', function(error, filelist){
+ 
     var title = 'WEB - create';
-    var list = template.list(filelist);
+    var list = template.list(request.list);
     var html = template.HTML(title, list, `
       <form action="/create_process" method="post">
         <p><input type="text" name="title" placeholder="title"></p>
@@ -72,7 +81,6 @@ app.get('/create',function(request,response){
     `, '');
     response.send(html);
   });
-})
 
 app.post('/create_process', function(request,response){
   /*
@@ -101,11 +109,11 @@ app.post('/create_process', function(request,response){
 
 
 app.get('/update/:pageId',function(request,response){
-  fs.readdir('./data', function(error, filelist){
+  
     var filteredId = path.parse(request.params.pageId).base;
     fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
       var title = request.params.pageId;
-      var list = template.list(filelist);
+      var list = template.list(request.list);
       var html = template.HTML(title, list,
         `
         <form action="/update_process" method="post">
@@ -123,7 +131,7 @@ app.get('/update/:pageId',function(request,response){
       );
       response.send(html);
     });
-  });
+
 })
 
 app.post('/update_process', function(request,response){
