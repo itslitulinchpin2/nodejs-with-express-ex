@@ -6,12 +6,15 @@ var path = require('path');
 var qs = require('querystring');
 var sanitizeHtml = require('sanitize-html');
 var template = require('./lib/template.js');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+var compression = require('compression');
+
 //main.js가 실행될때 마다 아랫줄의 미들웨어 또한 실행된다.
 //사용자가 전송한 포스트 데이터를 내부적으로 분석해서,
 //데이터를 모두 가져온 다음 알아서 콜백을 호출해준다.
 //request.body라는 프로퍼티를 미들웨어가 만들어준다.
 app.use(bodyParser.urlencoded({ extended: false }))
+app.use(compression())
 
 const port = 3000
 //get 뒤의 첫번째 인자는 path, routing을 위함
