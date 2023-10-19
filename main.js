@@ -8,8 +8,9 @@ var compression = require('compression');
 var topicRouter=require('./routes/topic')
 var indexRouter=require('./routes/index')
 //public 디렉토리 아래에서 스태틱 파일들을 찾겠다.
+var helmet=require('helmet')
 app.use(express.static('public'))
-
+app.use(helmet())
 //main.js가 실행될때 마다 아랫줄의 미들웨어 또한 실행된다.
 //사용자가 전송한 포스트 데이터를 내부적으로 분석해서,
 //데이터를 모두 가져온 다음 알아서 콜백을 호출해준다.
